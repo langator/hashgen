@@ -32,6 +32,9 @@ struct stat st;
 
 
 // input from stdin
+/*
+ *   for create hash string without '\n' tap Ctrl-D 2 time 
+ */
 if ( argc == 1) {
 	printf("%s\n", fhashgen(stdin));
 	return 0;
@@ -40,9 +43,6 @@ if ( (argc == 2) && ((strcmp(argv[1],"-")) == 0) ) {
         printf("%s\n",fhashgen(stdin));
 	return 0;
 }
-
-printf("%s\n",fhashgen(stdin));
-return 0;
 
 //add -f option support
 if ( strcmp(argv[1],"-f") == 0 ) {
