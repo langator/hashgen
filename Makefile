@@ -4,5 +4,8 @@
 CC=gcc
 CFLAGS=
 all:
-	$(CC) $(CFLAGS) -o hashgen -lmhash -lcrypt main.c
+	$(CC) $(CFLAGS) -O3 -o hashgen -lmhash main.c
+
+clean:
+	rm hashgen
 
