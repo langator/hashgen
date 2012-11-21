@@ -1,5 +1,5 @@
 /* main.c */
-// Copyright langator
+// Copyright 2012 langator
 // Distributed under the terms of the GNU General Public License v2 or later
 
 #include <stdio.h>
@@ -41,17 +41,30 @@ int V=0, F=0, L=0, S=0, H=0, O=0, T=0; // for options
 //n=args_parser(argv, argc);
 //return n;
 
-//arg parser v.2
+// input from stdin
+/*
+ *   for create hash of string without '\n' tap Ctrl-D 2 time 
+ */
+if ( argc == 1) {
+        printf("%s\n", fhashgen(stdin));
+        return 0;
+}
+if ( (argc == 2) && ((strcmp(argv[1],"-")) == 0) ) {
+        printf("%s\n", fhashgen(stdin));
+        return 0;
+}
+
+
+//args parser v.2, next step - function
 for (i=1; i<argc; i++ ) {
 	if ( (first > 1) || (second > 1) || (only_one > 0 && argc > 2) ) {
 		small_help();
 		return 1;
 		}
-	//DEBUG
-	printf("%d\n", i);
+	
 	sprintf(str, "%s", argv[i]);
 
-	//if args start file
+	//if first arg is file
 	if ( (i == 1) && (is_file(argv[1], first, one) == 0) ) {
 		str[0]='-';
 		str[1]='f';
@@ -61,8 +74,13 @@ for (i=1; i<argc; i++ ) {
 	//for long options (long to short)
 	if (str[0]=='-' && str[1]=='-') 
 		if ( strcmp(argv[i], "--help")==0 ) 
-			printf("%s\n", argv[i]);
-	printf("%s\n", argv[i]);
+			help();
+			//printf("%s\n", argv[i]);
+		else {
+			arg_error("Cannot args: ", argv[i]);
+			return 1;
+		}
+	
 	// start parse args
 	if ( (str[0]=='-' ) && ( str[1]!='-' ) )
 		for (c=1; (str[c]!='\0' && i<argc); c++) {
@@ -94,9 +112,34 @@ for (i=1; i<argc; i++ ) {
 					opt_error("Option error: ", str[c]);
 					return 1;
 					}
+				//check count args
+				if (i+1 == argc) {
+					fprintf(stderr, "Option error: \"%c\", cannot file.\n", str[c]);
+				        small_help();
+					return 1;
+					}
+
+				// count arg is files
+				for (i=i+1; ( is_file(argv[i], first, one) == 0 ); i++) {
+                        		if (start_file == -1)  
+                                		start_file=i; 
+                        		else
+                                		end_file=i;
+					if ( ((i+1) == argc) )
+						break;
+				}
+								
+				if (start_file == -1) {
+					arg_error("Cannot file: ", argv[i]);
+					return 1;
+					}
+				
+				// dont remove
+				if ( is_file(argv[i], first, one) != 0 )
+					i--;
 				break;
 			   //Option "f"
-			   case 'f': {
+			   case 'f': 
 			   	F=1;
 				one+=1;
 				first+=1;
@@ -131,7 +174,7 @@ for (i=1; i<argc; i++ ) {
 				if ( is_file(argv[i], first, one) != 0 )
 					i--;
 
-				break;}
+				break;
 			   //Option 's'
 			   case 's':
 			   	S=1;
@@ -141,7 +184,37 @@ for (i=1; i<argc; i++ ) {
 					opt_error("Option error: ", str[c]);
                                         return 1;
                                         }
-                                break;
+                                
+				//check count args
+				if (i+1 == argc) {
+					fprintf(stderr, "Option error: \"%c\", cannot file.\n", str[c]);
+				        small_help();
+					return 1;
+					}
+
+				//Нужно использовать do while, чтобы i не переполнялось 
+				// count arg is files
+				for (i=i+1; ( is_file(argv[i], first, one) == 0 ); i++) {
+                        		if (start_file == -1)  
+                                		start_file=i; 
+                        		else
+                                		end_file=i;
+					if ( ((i+1) == argc) )
+						break;
+				}
+								
+				if (start_file == -1) {
+					arg_error("Cannot file: ", argv[i]);
+					return 1;
+					}
+				
+				// dont remove
+				if ( is_file(argv[i], first, one) != 0 )
+					i--;
+
+
+				
+				break;
 
 			   //Option "o"
 			   case 'o':
@@ -149,7 +222,7 @@ for (i=1; i<argc; i++ ) {
 				one+=1;
 			   	second=second++;
 				if ( ((i+1) == argc) ) {
-					arg_error("Cannot output file", NULL);
+					arg_error("Cannot output file", "");
 					return 1;
 					}
 				
@@ -159,43 +232,45 @@ for (i=1; i<argc; i++ ) {
                                                 break;
 					else
 						 if ( is_file(argv[i+1], second, one) == 0 ) {
-                                                	arg_error("Option error: \"-o\", uses more then one output file", NULL);
+                                                	arg_error("Option error: \"-o\", uses more then one output file", "");
                                                 	return 1;
                                                 	}
 						else
-							break;  //ВООБЩЕ, тут лучше еще подумать
+							break;  
 
                                 }
 				
 				if ( OUTPUT == -1 ) {
-					arg_error("Cannot output file.", NULL);
+					arg_error("Cannot output file.", "");
 					return 1;
 					}
 				
-				break; // NEED DEBUG
+				break; 
 			   
 			   
 			   default:
-			   	opt_error("Invalid option: \"%c\"\n", str[c]);
-				small_help();
+			   	opt_error("Invalid option: ", str[c]);
 				return 1;
 				break;
 			}
 			one=0;
-		   printf("STR= %c I=%d %s\n",str[c], i, argv[i]);
+		   
+		   //DEBUG
+		   //printf("STR= %c I=%d %s\n",str[c], i, argv[i]);
 		   }
-
 
 // end arg parser
 }
 
-printf("GOOD\n");
+//DEBUG
+//printf("ARGPARSER OUT\n");
 
 
 //
 // NEEDED ADD CHECK FILES argv[start_file] - argv[end_file]
 //
 
+// "-f" 
 if (F==1) {
 	do {
 		if ( (fd = fopen(argv[start_file],"r")) == NULL ) {
@@ -216,7 +291,7 @@ if (F==1) {
 return 0;
 }
 
-
+// "-s" options
 if (S==1) {
         do {
                 if (V == 1) {
@@ -231,11 +306,32 @@ if (S==1) {
 return 0;
 }
 
+// "-l" options
+if (L==1) {
+        do {
+                if (V == 1) {
+                        //NEED add new arg to bufhash for verbose mode
+			bufhash(argv[start_file]);
+			}
+                else 
+		        bufhash(argv[start_file]);
+
+                start_file++;
+        } while (start_file<(end_file+1));
+return 0;
+}
+
+
 //for stdout in file need be write function:
 //int output(FILE, V) 
 
 
 return 0;
+//================================================================
+//	EXIT MAIN
+//================================================================
+
+
 
 // input from stdin
 /*
@@ -249,7 +345,7 @@ if ( (argc == 2) && ((strcmp(argv[1],"-")) == 0) ) {
         printf("%s\n",fhashgen(stdin));
 	return 0;
 }
-return n;
+
 //add -f option support
 if ( strcmp(argv[1],"-f") == 0 ) {
 	for (i=2; i<argc; i++)
@@ -275,7 +371,7 @@ if ( strcmp(argv[1],"-l") == 0 ) {
 					a[c]=string[c];
 					c++;
 					if (c==(MAXSTR-1) && string[c]!='\n')
-						fprintf(stderr, "ERROR: line more than %d char\n",MAXSTR);
+						fprintf(stderr, "ERROR: line more than %d char\n", MAXSTR);
 				}
 			
 			a[c]='\0';
@@ -340,7 +436,8 @@ int arg_error(char *msg, char *msg2){
 // check arg on file
 int is_file(char arg[], int first, int one ) {
 	int i;
-	printf("%s\n", arg);
+	//DEBUG
+	//printf("%s\n", arg);
 	if ( (first > 1) || (one > 1) ) {
 		fprintf(stderr, "Error args.\n"); 
 		small_help();
@@ -357,7 +454,7 @@ int is_file(char arg[], int first, int one ) {
 // *	BUG: function work 1.6 time slow then sha256sum
 // ********************************
 
-//buffered read and hashgen
+//buffered read by line and hashgen
 int bufhash(char arg[]) {
 	char buf[BUFFERSIZE], str[BUFFERSIZE];
 	int n_char, in_fd, c, i=0;
