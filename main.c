@@ -12,18 +12,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include "hashgen.h"
 #define MAXSTR 1024
 #define BUFFERSIZE  4096
-
-int arg_error(char *msg, char *msg2);
-int opt_error(char *msg, char msg2);
-int is_file(char arg[], int first, int one);
-int args_parser(char *arg[], int argc);
-int small_help(void);
-char * hashgen(unsigned char args[]);
-char * fhashgen(FILE *stream);
-int bufhash(char arg[]);
-int test_arg(char arguments[]);
 
 int main(int argc, char *argv[]) { 
 int c, i, n, e;
@@ -36,10 +27,6 @@ struct stat st;
 
 int one=0, first=0, second=0, start_file=-1, end_file=-1, OUTPUT=-1, only_one=0;
 int V=0, F=0, L=0, S=0, H=0, O=0, T=0; // for options
-
-// arg parser
-//n=args_parser(argv, argc);
-//return n;
 
 // input from stdin
 /*
@@ -54,7 +41,6 @@ if ( (argc == 2) && ((strcmp(argv[1],"-")) == 0) ) {
         return 0;
 }
 
-
 //args parser v.2, next step - function
 for (i=1; i<argc; i++ ) {
 	if ( (first > 1) || (second > 1) || (only_one > 0 && argc > 2) ) {
@@ -63,14 +49,23 @@ for (i=1; i<argc; i++ ) {
 		}
 	
 	sprintf(str, "%s", argv[i]);
-
+	
 	//if first arg is file
 	if ( (i == 1) && (is_file(argv[1], first, one) == 0) ) {
 		str[0]='-';
 		str[1]='f';
 		str[2]='\0';
 		i=i-1;
-		}	
+		}
+	
+	if (argc>2 && i==1 && (is_file(argv[2], first, one) == 0) && (strcmp(argv[1], "-v")==0)) {
+		str[0]='-';
+		str[1]='f';
+		str[2]='\0';
+		V=1;
+		}
+		
+		
 	//for long options (long to short)
 	if (str[0]=='-' && str[1]=='-') 
 		if ( strcmp(argv[i], "--help")==0 ) 
@@ -266,9 +261,19 @@ for (i=1; i<argc; i++ ) {
 //printf("ARGPARSER OUT\n");
 
 
-//
-// NEEDED ADD CHECK FILES argv[start_file] - argv[end_file]
-//
+// CHECK FILES argv[start_file] - argv[end_file]
+if ( (F==1) || (L==1)) {
+	e=start_file;
+	while (e < (end_file+1)) {
+		if (stat(argv[e], &st) == -1) {
+			fprintf(stderr, "%s: cannot open file ", argv[0]);
+			perror(argv[e]);
+			exit(EXIT_FAILURE);
+		}
+		e++;
+	}
+}
+
 
 // "-f" 
 if (F==1) {
@@ -331,36 +336,6 @@ return 0;
 //	EXIT MAIN
 //================================================================
 
-
-
-// input from stdin
-/*
- *   for create hash of string without '\n' tap Ctrl-D 2 time 
- */
-if ( argc == 1) {
-	printf("%s\n", fhashgen(stdin));
-	return 0;
-}
-if ( (argc == 2) && ((strcmp(argv[1],"-")) == 0) ) {
-        printf("%s\n",fhashgen(stdin));
-	return 0;
-}
-
-//add -f option support
-if ( strcmp(argv[1],"-f") == 0 ) {
-	for (i=2; i<argc; i++)
-		if ( (fd = fopen(argv[i],"r")) ) {
-                	printf("%s\n",fhashgen(fd));
-			fclose(fd);
-			}
-		else {
-			fprintf(stderr,"Error open file: %s\n", argv[i]);
-			return 1;
-		}
-		
-		return 0;
-}
-
 // read files by line and create hash
 if ( strcmp(argv[1],"-l") == 0 ) {
 	for (i=2; i<argc; i++)
@@ -387,32 +362,9 @@ if ( strcmp(argv[1],"-l") == 0 ) {
 
                 return 0;
 }
-
-//test count args
-if (argc != 1) {
-// full help
-	if ( ((strcmp(argv[1],"--help"))==0) || ((strcmp(argv[1],"-h"))==0) ) {
-        	help();
-		return 0;
-	}
+//END MAIN
 }
 
-// create hash summ of strings
-if ( ((strcmp(argv[1],"-s")) == 0) ) {
-	if (argc == 2) 
-		small_help();
-
-	for (i=2; i<argc; i++) 
-		printf("%s\n",hashgen(argv[i]));
-	return 0;
-	}
-
-// create hash by line, use buffer in reading file
-for (c=1; c<argc; c++)
-	bufhash(argv[c]);
-return 0;
-
-}
 
 /***************************
  *	functions 
@@ -525,7 +477,7 @@ return buffer;
 
 // for stream only
 //**********************************************************
-//BUG: then run without arg, have "\n" in end string
+//BUG: then run without arg, have "\n" in the end string
 //**********************************************************
 char* fhashgen(FILE *stream) {
 	int i, n;
@@ -564,7 +516,7 @@ int help(void) {
 	printf("  -l <files>\n");
 	printf("  -j jobs\n");
 	printf("  -h, --help\n");
-	printf("  -c <config file>\n");
+	printf("  -c check hash\n");
 	printf("  -D debug\n");
 	printf("  -t type hash\n");
 	printf("  -v verbose\n");
@@ -574,62 +526,9 @@ int help(void) {
 	return 0;
 }
 
-struct hashv {
-	char *hash;
-	char *argm;
-	};
-
-//int verbose_print()
-
-
-
-//function for parse args
-int args_parser(char *arg[], int argc) {
-	int i,c, testret;
-	char * d;
-	char str[MAXSTR];
-	struct hashv s;
-		
-	//DEBUG
-	printf("Count args: %d\n", argc);
-	printf("Run comang:");
-	for (i=0; i<argc; i++){
-		s.argm=arg[i];
-		s.hash=hashgen(arg[i]);
-		printf("%s %s\n", s.hash, s.argm);
-		}
-		//printf(" %s", arg[i]);
-	putchar('\n');
-
-	for (i=0; i<argc; i++) {
-        	sprintf(str, "%s", arg[i]);
-
-        	if (str[0]=='-' && str[1]!='-') {
-			printf("short arg: %s\n", arg[i]);
-			testret=test_arg(arg[i]);
-			if (testret == -1) 
-				return 1;
-			}
-
-		if (str[0]=='-' &&  str[1]=='-')
-			printf("long arg: %s\n", arg[i]);
-		
-        	for (c=0; str[c]!='\0'; c++)
-			;;
-	}
-        putchar('\n');
-
-
-
-	// -t type hash
-	// -j jobs
-	// -o output
-	return 0;
-}
-
 //test arg
 int test_arg(char argument[]) {
-	int i, STRUCT;
+	int i;
 	for (i=1; argument[i]!='\0'; i++) {
 		switch (argument[i]) {
 			case 's':
@@ -646,7 +545,6 @@ int test_arg(char argument[]) {
 				break;
 			case 'v':
 				printf("V\n");
-				STRUCT=1;
 				break;
 			case 'o':
 				printf("O\n");
