@@ -6,7 +6,9 @@ Utility for generate hash value of files or strings.
 Compiling, dependencies, etc.
 ----------------------------
 * first you need to install dependencies.
+
     libmhash
+
 * run "make" to compile.
 
 ### Done:

@@ -21,7 +21,6 @@ int c, i, n, e;
 FILE *fd;
 char string[MAXSTR];
 char str[MAXSTR];
-char str2[MAXSTR];
 char a[MAXSTR];
 struct stat st;
 
@@ -40,6 +39,12 @@ if ( (argc == 2) && ((strcmp(argv[1],"-")) == 0) ) {
         printf("%s\n", fhashgen(stdin));
         return 0;
 }
+
+if ( (argc == 2) && ((strcmp(argv[1],"-v")) == 0) ) {
+	small_help();
+        return 1;
+}
+
 
 //args parser v.2, next step - function
 for (i=1; i<argc; i++ ) {
@@ -65,12 +70,12 @@ for (i=1; i<argc; i++ ) {
 		V=1;
 		}
 		
-		
 	//for long options (long to short)
 	if (str[0]=='-' && str[1]=='-') 
-		if ( strcmp(argv[i], "--help")==0 ) 
+		if ( strcmp(argv[i], "--help")==0 ) {
 			help();
-			//printf("%s\n", argv[i]);
+			return 0;
+			}
 		else {
 			arg_error("Cannot args: ", argv[i]);
 			return 1;
@@ -152,8 +157,10 @@ for (i=1; i<argc; i++ ) {
 				//Нужно использовать do while, чтобы i не переполнялось 
 				// count arg is files
 				for (i=i+1; ( is_file(argv[i], first, one) == 0 ); i++) {
-                        		if (start_file == -1)  
+                        		if (start_file == -1) { 
                                 		start_file=i; 
+						end_file=start_file;
+						}
                         		else
                                 		end_file=i;
 					if ( ((i+1) == argc) )
