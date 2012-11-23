@@ -1,0 +1,52 @@
+.TH HASHGEN 1 "23 November 2012" "hashgen" "User Commands" 
+.SH NAME
+hashgen \- utility for generate hash value of files or strings.
+.SH SYNOPSIS
+.B hashgen
+[-o] [OUTPUT] [-t] [TYPE HASH] [-vfl] [FILE] [-s] [STRING]
+.SH DESCRIPTION
+.PP
+.I Hashgen
+create or check hash value of files or strings. With no FILE, or when FILE is -, read standard input.
+.SH OPTIONS
+.TP
+.B \-f
+create hash sums of files
+.TP
+.B \-l
+read file by line and create hash sums each string
+.TP
+.B \-s
+create hash sums of string
+.TP
+.B \-o
+output to file
+.TP
+.B \-t
+type hash algorithm
+.TP
+.B \-v
+verbose output
+.TP
+.B \-c
+check hash sums
+.TP
+.B \-h, \-\-help
+display help and exit
+.SH EXAMPLES
+.TP
+.B hashgen file1 file2 
+Create hash sums of files.
+.TP
+.B hashgen -s string1 string2
+Create hash sums of strings:. 
+.TP
+.B hashgen -lv file1 file2
+Create hash sums each string of file and verbose print.
+.TP
+.B hashgen -v -f file1 file2 -o output_file
+Create hash sums of files and verbose output in output_file.
+.SH COPYRIGHT
+Copyright 2012 Mihail Usov.  License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>. This is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
+.SH AUTHOR
+Written by Mihail Usov <langator@gmail.com>
