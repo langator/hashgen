@@ -1,18 +1,20 @@
-###
-###
-###
-CC=gcc
 CFLAGS=
-HASHGEN_PATH_INSTALL="/usr/bin/"
+TARGET = hashgen
+HASHGEN_PATH_INSTALL= /usr/bin
+
+.PHONY: all clean install uninstall
 
 all:
-	$(CC) $(CFLAGS) -O3 -o hashgen -lmhash main.c
+	$(CC) $(CFLAGS) -O3 -o ${TARGET} -lmhash main.c
 
 install:
-	cp hashgen ${HASHGEN_PATH_INSTALL}
+	cp ${TARGET} ${HASHGEN_PATH_INSTALL}
 	cp doc/hashgen.1 /usr/share/man/man1/hashgen.1
-	bzip2 /usr/share/man/man1/hashgen.1
+	bzip2 -f /usr/share/man/man1/hashgen.1
 
 clean:
-	rm hashgen
+	rm ${TARGET}
 
+uninstall:
+	rm ${HASHGEN_PATH_INSTALL}/${TARGET}
+	rm /usr/share/man/man1/hashgen.1.bz2

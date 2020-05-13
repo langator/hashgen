@@ -27,10 +27,7 @@ struct stat st;
 int one=0, first=0, second=0, start_file=-1, end_file=-1, OUTPUT=-1, only_one=0;
 int V=0, F=0, L=0, S=0, H=0, O=0, T=0; // for options
 
-// input from stdin
-/*
- *   for create hash of string without '\n' tap Ctrl-D 2 time 
- */
+
 if ( argc == 1) {
         printf("%s\n", fhashgen(stdin));
         return 0;
@@ -41,8 +38,11 @@ if ( (argc == 2) && ((strcmp(argv[1],"-")) == 0) ) {
 }
 
 if ( (argc == 2) && ((strcmp(argv[1],"-v")) == 0) ) {
-	small_help();
-        return 1;
+	printf("%s", fhashgen(stdin));
+	printf("  -\n");
+
+//	small_help();
+        return 0;
 }
 
 
